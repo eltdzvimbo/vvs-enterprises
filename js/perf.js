@@ -1,5 +1,4 @@
 (function () {
-  var embedsLoaded = false;
   var heroStarted = false;
 
   function playVideo(video) {
@@ -31,15 +30,63 @@
     el.removeAttribute("data-bg");
   }
 
-  function loadEmbeds() {
-    if (embedsLoaded) return;
-    var iframes = document.querySelectorAll("iframe[data-embed]");
-    if (!iframes.length) return;
-    embedsLoaded = true;
-    iframes.forEach(function (iframe) {
-      var url = iframe.getAttribute("data-embed");
-      if (!url) return;
-      iframe.src = url;
+  function cleanEmbedUrl(url) {
+    return url.split("?")[0] + "?utm_source=generator&theme=0";
+  }
+
+  function openUrlFromEmbed(embedUrl) {
+    return embedUrl
+      .replace("/embed/track/", "/track/")
+      .replace("/embed/artist/", "/artist/")
+      .split("?")[0];
+  }
+
+  function wrapSpotifyIframes() {
+    document.querySelectorAll('iframe[data-embed*="open.spotify.com"]').forEach(function (iframe) {
+      if (iframe.parentElement && iframe.parentElement.classList.contains("spotify-embed")) return;
+      var wrap = document.createElement("div");
+      wrap.className = "spotify-embed";
+      iframe.parentNode.insertBefore(wrap, iframe);
+      wrap.appendChild(iframe);
+
+      var fallback = document.createElement("a");
+      fallback.className = "spotify-fallback";
+      fallback.href = openUrlFromEmbed(iframe.getAttribute("data-embed") || "");
+      fallback.target = "_blank";
+      fallback.rel = "noopener noreferrer";
+      fallback.textContent = "Open in Spotify";
+      wrap.appendChild(fallback);
+    });
+  }
+
+  function activateIframe(iframe) {
+    if (!iframe) return;
+    var url = iframe.getAttribute("data-embed");
+    if (!url) return;
+    if (iframe.getAttribute("src") === cleanEmbedUrl(url) || iframe.dataset.activated === "true") return;
+    iframe.dataset.activated = "true";
+    iframe.setAttribute("loading", "eager");
+    iframe.src = cleanEmbedUrl(url);
+  }
+
+  function visibleSliderIframe(slider) {
+    var slides = slider.querySelectorAll(".w-slide");
+    var origin = slider.getBoundingClientRect().left;
+    var closest = null;
+    var closestDist = Infinity;
+    slides.forEach(function (slide) {
+      var dist = Math.abs(slide.getBoundingClientRect().left - origin);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = slide.querySelector("iframe[data-embed]");
+      }
+    });
+    return closest;
+  }
+
+  function loadVisibleSpotify() {
+    document.querySelectorAll(".slider.w-slider").forEach(function (slider) {
+      activateIframe(visibleSliderIframe(slider));
     });
   }
 
@@ -52,18 +99,22 @@
     });
   }
 
+  wrapSpotifyIframes();
+
   var lazyObserver = new IntersectionObserver(
     function (entries) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) return;
         var el = entry.target;
         if (el.tagName === "VIDEO") hydrateVideo(el);
-        else if (el.matches && el.matches(".slider, .album-section, [data-embed-section]")) loadEmbeds();
-        else hydrateBg(el);
+        else if (el.classList.contains("slider")) loadVisibleSpotify();
+        else if (el.classList.contains("album-section") || el.classList.contains("div-block-23")) {
+          el.querySelectorAll("iframe[data-embed]").forEach(activateIframe);
+        } else hydrateBg(el);
         lazyObserver.unobserve(el);
       });
     },
-    { rootMargin: "280px 0px", threshold: 0.01 }
+    { rootMargin: "200px 0px", threshold: 0.01 }
   );
 
   document.querySelectorAll("video.js-lazy-video").forEach(function (video) {
@@ -72,19 +123,18 @@
   document.querySelectorAll("[data-bg]").forEach(function (el) {
     lazyObserver.observe(el);
   });
-  document.querySelectorAll(".slider, .album-section").forEach(function (el) {
+  document.querySelectorAll(".slider, .album-section, .div-block-23").forEach(function (el) {
     lazyObserver.observe(el);
   });
 
-  window.addEventListener("load", function () {
-    startHero();
-    loadEmbeds();
+  document.addEventListener("click", function (event) {
+    if (event.target.closest(".w-slider-arrow-left, .w-slider-arrow-right, .w-slider-nav, .w-slider-dot")) {
+      window.setTimeout(loadVisibleSpotify, 520);
+    }
   });
 
-  setTimeout(function () {
-    startHero();
-    loadEmbeds();
-  }, 400);
+  window.addEventListener("load", startHero);
+  setTimeout(startHero, 400);
 
   function loadScript(src, attrs) {
     var script = document.createElement("script");
