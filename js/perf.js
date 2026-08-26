@@ -31,7 +31,10 @@
   }
 
   function cleanEmbedUrl(url) {
-    return url.split("?")[0] + "?utm_source=generator";
+    if (url.indexOf("open.spotify.com") !== -1) {
+      return url.split("?")[0] + "?utm_source=generator";
+    }
+    return url;
   }
 
   function openUrlFromEmbed(embedUrl) {
@@ -110,7 +113,11 @@
         var el = entry.target;
         if (el.tagName === "VIDEO") hydrateVideo(el);
         else if (el.classList.contains("slider")) loadVisibleSpotify();
-        else if (el.classList.contains("album-section") || el.classList.contains("div-block-23")) {
+        else if (
+          el.classList.contains("album-section") ||
+          el.classList.contains("div-block-23") ||
+          el.classList.contains("latest-video-frame")
+        ) {
           el.querySelectorAll("iframe[data-embed]").forEach(activateIframe);
         } else hydrateBg(el);
         lazyObserver.unobserve(el);
@@ -125,9 +132,29 @@
   document.querySelectorAll("[data-bg]").forEach(function (el) {
     lazyObserver.observe(el);
   });
-  document.querySelectorAll(".slider, .album-section, .div-block-23").forEach(function (el) {
+  document.querySelectorAll(".slider, .album-section, .div-block-23, .latest-video-frame").forEach(function (el) {
     lazyObserver.observe(el);
   });
+
+  document.addEventListener("click", function (event) {
+    var floatLink = event.target.closest(".new-video-float");
+    if (!floatLink) return;
+    document.querySelectorAll(".latest-video-frame iframe[data-embed]").forEach(activateIframe);
+  });
+
+  var floatBtn = document.querySelector(".new-video-float");
+  var latestVideo = document.querySelector("#latest-video");
+  if (floatBtn && latestVideo) {
+    var hideFloat = new IntersectionObserver(
+      function (entries) {
+        floatBtn.classList.toggle("is-hidden", entries.some(function (entry) {
+          return entry.isIntersecting;
+        }));
+      },
+      { threshold: 0.35 }
+    );
+    hideFloat.observe(latestVideo);
+  }
 
   document.addEventListener("click", function (event) {
     if (event.target.closest(".w-slider-arrow-left, .w-slider-arrow-right, .w-slider-nav, .w-slider-dot")) {
