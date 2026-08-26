@@ -1,5 +1,12 @@
 /* Inner pages — extends the VVS Webflow design system */
 
+.block-product[data-bg] {
+  background-image: none;
+  background-color: #1b1a1d;
+  background-size: cover;
+  background-position: center;
+}
+
 .navbar-3.w-nav {
   position: absolute;
   top: 0;
