@@ -31,7 +31,7 @@
   }
 
   function cleanEmbedUrl(url) {
-    return url.split("?")[0] + "?utm_source=generator&theme=0";
+    return url.split("?")[0] + "?utm_source=generator";
   }
 
   function openUrlFromEmbed(embedUrl) {
@@ -66,6 +66,8 @@
     if (iframe.getAttribute("src") === cleanEmbedUrl(url) || iframe.dataset.activated === "true") return;
     iframe.dataset.activated = "true";
     iframe.setAttribute("loading", "eager");
+    iframe.setAttribute("allow", "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share");
+    iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
     iframe.src = cleanEmbedUrl(url);
   }
 
