@@ -291,6 +291,8 @@
 
   document.addEventListener("click", function (event) {
     if (event.target.closest(".w-slider-arrow-left, .w-slider-arrow-right, .w-slider-nav, .w-slider-dot")) {
+      window.setTimeout(loadVisibleSpotify, 80);
+      window.setTimeout(loadVisibleSpotify, 260);
       window.setTimeout(loadVisibleSpotify, 520);
     }
   });
