@@ -1,6 +1,17 @@
 (function () {
   var heroStarted = false;
 
+  function updateDynamicYears() {
+    var year = new Date().getFullYear();
+    document.querySelectorAll(".js-current-year, [data-auto-year]").forEach(function (el) {
+      el.textContent = year;
+    });
+  }
+  updateDynamicYears();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", updateDynamicYears);
+  }
+
   function playVideo(video) {
     var play = video.play();
     if (play && play.catch) play.catch(function () {});
