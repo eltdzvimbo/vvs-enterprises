@@ -258,29 +258,31 @@
     window.requestAnimationFrame(step);
   }
 
-  // Intercept button click instantly with zero delay
+  // Intercept anchor clicks instantly with zero delay
   document.addEventListener(
     "click",
     function (event) {
-      var floatLink = event.target.closest(".new-video-float, a[href='#latest-video'], a[href='#Videos']");
-      if (!floatLink) return;
+      var anchor = event.target.closest(".new-video-float, a[href='#latest-video'], a[href='#Videos'], a[href='#Music']");
+      if (!anchor) return;
+
+      var href = anchor.getAttribute("href");
+      var targetSelector = href && href.startsWith("#") ? href : "#latest-video";
+      var target = document.querySelector(targetSelector) || (targetSelector === "#latest-video" ? document.querySelector("#Videos") : null);
+      if (!target) return;
 
       event.preventDefault();
       event.stopPropagation();
       if (event.stopImmediatePropagation) event.stopImmediatePropagation();
 
-      var target = document.querySelector("#latest-video") || document.querySelector("#Videos");
-      if (target) {
-        fastSmoothScrollTo(target);
+      fastSmoothScrollTo(target);
 
-        var video = target.querySelector("video");
-        if (video && video.preload !== "auto") {
-          video.preload = "auto";
-        }
-        var iframe = target.querySelector("iframe[data-embed]");
-        if (iframe) {
-          activateIframe(iframe);
-        }
+      var video = target.querySelector("video");
+      if (video && video.preload !== "auto") {
+        video.preload = "auto";
+      }
+      var iframe = target.querySelector("iframe[data-embed]");
+      if (iframe) {
+        activateIframe(iframe);
       }
     },
     true
