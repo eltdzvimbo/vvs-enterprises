@@ -49,6 +49,14 @@
   84%, 100% { transform: translateX(-75%); }
 }
 
+@media screen and (max-width: 767px) {
+  .collection-item-4 .block-product,
+  .collection-item-4 .artist-card {
+    height: auto;
+    aspect-ratio: 2 / 3;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lexi-slides {
     animation: none;
